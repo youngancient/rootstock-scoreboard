@@ -34,9 +34,12 @@
   "overrides": {
     "ajv": "^8.18.0",
     "cookie": "^0.7.0",
-    "lodash": "^4.17.21",
+    "lodash": "^4.17.23",
     "tmp": "^0.2.4",
     "undici": "^6.23.0",
-    "minimatch": "^10.2.1"
+    "minimatch": "^10.2.4",
+    "serialize-javascript": "^7.0.4",
+    "immutable": "^4.3.8",
+    "eth-gas-reporter": "^0.2.27"
   }
 }
