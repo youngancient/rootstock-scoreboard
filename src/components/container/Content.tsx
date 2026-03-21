@@ -12,6 +12,7 @@ import { IVotingStatus } from '@/interface/IVotingStatus';
 import Countdown from '../extras/Countdown';
 import AddAdminDialog from '../dialog/AddAdminDialog';
 import KickstartVotingDialog from '../dialog/KickstartDialog';
+import { roleToString } from '@/utils/roleToString';
 
 function Content() {
   const [dialog, setDialog] = useState<boolean>(false);
@@ -20,15 +21,17 @@ function Content() {
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
 
   const { getTeams, getVotingStatus, checkAdminPermissions } = useManager();
-  const { provider, teamLoading } = useAuth();
+  const { provider, teamLoading, address } = useAuth();
   const [userStatus, setUserStatus] = useState<{
     isAuthorized: boolean;
     role: AdminRole;
   }>({ isAuthorized: false, role: AdminRole.NONE });
+  const [isCheckingRole, setIsCheckingRole] = useState(true);
 
   useEffect(() => {
     let isCurrent = true;
     const init = async () => {
+      setIsCheckingRole(true);
       await getTeams();
       let status = await getVotingStatus();
       if (isCurrent) {
@@ -37,13 +40,14 @@ function Content() {
         }
         let result = await checkAdminPermissions();
         setUserStatus(result);
+        setIsCheckingRole(false);
       }
     };
     init();
     return () => {
       isCurrent = false;
     };
-  }, [provider, getTeams,getVotingStatus, checkAdminPermissions]);
+  }, [provider, getTeams, getVotingStatus, checkAdminPermissions]);
 
   return (
     <>
@@ -61,6 +65,17 @@ function Content() {
             )}
           </div>
         </div>
+        {address && userStatus && (
+          <h2 className="mt-6 text-2xl font-semibold text-gray-100 tracking-wide">
+            Welcome, <span className="text-amber-500 drop-shadow-sm">
+              {isCheckingRole ? (
+                <span className="animate-pulse">...</span>
+              ) : (
+                userStatus.role === AdminRole.NONE ? 'User' : roleToString(userStatus.role)
+              )}
+            </span>{isCheckingRole ? '' : '!'}
+          </h2>
+        )}
         <div className="mt-8 flex gap-4">
           {userStatus.isAuthorized && (
             <div className="flex items-end">
@@ -102,7 +117,7 @@ function Content() {
       </section>
       <AddTeamDialog open={dialog} closeDialog={() => setDialog(false)} />
 
-        <KickstartVotingDialog
+      <KickstartVotingDialog
         open={kickstartOpen}
         closeDialog={() => setKickstartOpen(false)}
         onSuccess={async () => {

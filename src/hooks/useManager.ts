@@ -38,7 +38,7 @@ const useManager = () => {
 
   const initializeProvider = useCallback(async () => {
     if (!provider) {
-       PROVIDER.current = RPC_PROVIDER;
+      PROVIDER.current = RPC_PROVIDER;
     }
     if (provider) {
       PROVIDER.current = await provider.getSigner()
@@ -71,7 +71,7 @@ const useManager = () => {
       setTeamLoading(true);
       const teamManager = await initializeProvider()
       const items = await teamManager?.getTeamNames();
-      const teamsDetail:ITeam[] = [];
+      const teamsDetail: ITeam[] = [];
       for (const team in items) {
         const detail = await teamManager?.getTeamInfo(items[team]);
         const score = await teamManager.getScore(items[team]);
@@ -92,9 +92,9 @@ const useManager = () => {
       const decodedError: DecodedError = await errorDecoder.decode(error);
       toast.error(decodedError.reason);
     }
-  }, [initializeProvider, setTeams, setTeamLoading, address, provider, setContract, setTokenBalance]);
+  }, [initializeProvider,address, provider]);
 
-  const addVote = async (teamName: string, amount:number) => {
+  const addVote = useCallback(async (teamName: string, amount:number) => {
     const value = ethers.parseEther(amount.toString());
     try {
       setIsLoading(FETCH_STATUS.WAIT_WALLET)
@@ -119,9 +119,9 @@ const useManager = () => {
       setErrorText(decodedError.reason || "Failed to add vote!");
       setIsLoading(FETCH_STATUS.ERROR)
     }
-  }
+  }, [address, contract, provider,teamManager]);
 
-  const addTeam = async (team: ICreateTeam) => {
+  const addTeam = useCallback(async (team: ICreateTeam) => {
     const { teamLeaderAddress, teamName, memeTokenAddress } = team;
     try {
       setIsLoading(FETCH_STATUS.WAIT_WALLET)
@@ -137,9 +137,9 @@ const useManager = () => {
       setErrorText(decodedError.reason || "Failed to add team!");
       setIsLoading(FETCH_STATUS.ERROR)
     }
-  }
+  }, [teamManager]);
 
-  const kickStartVoting = async (durationInSeconds: string | number) => {
+  const kickStartVoting = useCallback(async (durationInSeconds: string | number) => {
     try {
       setIsLoading(FETCH_STATUS.WAIT_WALLET);
       const duration = BigInt(durationInSeconds);
@@ -157,7 +157,7 @@ const useManager = () => {
       setIsLoading(FETCH_STATUS.ERROR);
       return false;
     }
-  };
+  }, [teamManager]);
 
   const getVotingStatus = useCallback(async () => {
     try {
@@ -202,7 +202,7 @@ const useManager = () => {
     }
   }, [address, initializeProvider]);
 
-  const assignAdminRole = async (targetAddress: string, role: AdminRole) => {
+  const assignAdminRole = useCallback(async (targetAddress: string, role: AdminRole) => {
     try {
       setIsLoading(FETCH_STATUS.WAIT_WALLET);
 
@@ -227,7 +227,67 @@ const useManager = () => {
       setIsLoading(FETCH_STATUS.ERROR);
       return false;
     }
-  };
+  }, [teamManager]);
+
+  const triggerEmergencyMode = useCallback(async () => {
+    try {
+      setIsLoading(FETCH_STATUS.WAIT_WALLET);
+      const response = await teamManager?.triggerEmergency();
+
+      setIsLoading(FETCH_STATUS.WAIT_TX);
+      setTx(response);
+
+      await response?.wait();
+      setIsLoading(FETCH_STATUS.COMPLETED);
+      return true;
+    } catch (error) {
+      console.error("Error triggering emergency mode:", error);
+      const decodedError = await errorDecoder.decode(error);
+      setErrorText(decodedError.reason || "Failed to trigger emergency mode");
+      setIsLoading(FETCH_STATUS.ERROR);
+      return false;
+    }
+  }, [teamManager]);
+
+  const resolveEmergency = useCallback(async () => {
+    try {
+      setIsLoading(FETCH_STATUS.WAIT_WALLET);
+      const response = await teamManager?.resolveEmergency();
+
+      setIsLoading(FETCH_STATUS.WAIT_TX);
+      setTx(response);
+
+      await response?.wait();
+      setIsLoading(FETCH_STATUS.COMPLETED);
+      return true;
+    } catch (error) {
+      console.error("Error resolving emergency mode:", error);
+      const decodedError = await errorDecoder.decode(error);
+      setErrorText(decodedError.reason || "Failed to resolve emergency mode");
+      setIsLoading(FETCH_STATUS.ERROR);
+      return false;
+    }
+  }, [teamManager]);
+
+  const emergencyWithdraw = useCallback(async (tokenAddress: string, receiver : string, amount : string) => {
+    try {
+      setIsLoading(FETCH_STATUS.WAIT_WALLET);
+      const response = await teamManager?.emergencyWithdraw(tokenAddress, receiver, amount);
+
+      setIsLoading(FETCH_STATUS.WAIT_TX);
+      setTx(response);
+
+      await response?.wait();
+      setIsLoading(FETCH_STATUS.COMPLETED);
+      return true;
+    } catch (error) {
+      console.error("Error triggering emergency mode:", error);
+      const decodedError = await errorDecoder.decode(error);
+      setErrorText(decodedError.reason || "Failed to trigger emergency mode");
+      setIsLoading(FETCH_STATUS.ERROR);
+      return false;
+    }
+  }, [teamManager]);
 
   return {
     addVote,
@@ -239,7 +299,10 @@ const useManager = () => {
     kickStartVoting,
     getVotingStatus,
     checkAdminPermissions,
-    assignAdminRole
+    assignAdminRole,
+    triggerEmergencyMode,
+    emergencyWithdraw,
+    resolveEmergency
   }
 }
 
