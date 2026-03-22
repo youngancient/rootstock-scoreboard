@@ -3,7 +3,9 @@
 /* eslint-disable */
 import type {
   BaseContract,
+  BytesLike,
   FunctionFragment,
+  Result,
   Interface,
   ContractRunner,
   ContractMethod,
@@ -14,15 +16,24 @@ import type {
   TypedDeferredTopicFilter,
   TypedEventLog,
   TypedListener,
-} from "../../../../common";
+  TypedContractMethod,
+} from "../../common";
 
-export interface IERC20ErrorsInterface extends Interface {}
+export interface IMemeTokenInterface extends Interface {
+  getFunction(nameOrSignature: "getUri" | "name"): FunctionFragment;
 
-export interface IERC20Errors extends BaseContract {
-  connect(runner?: ContractRunner | null): IERC20Errors;
+  encodeFunctionData(functionFragment: "getUri", values?: undefined): string;
+  encodeFunctionData(functionFragment: "name", values?: undefined): string;
+
+  decodeFunctionResult(functionFragment: "getUri", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
+}
+
+export interface IMemeToken extends BaseContract {
+  connect(runner?: ContractRunner | null): IMemeToken;
   waitForDeployment(): Promise<this>;
 
-  interface: IERC20ErrorsInterface;
+  interface: IMemeTokenInterface;
 
   queryFilter<TCEvent extends TypedContractEvent>(
     event: TCEvent,
@@ -61,9 +72,20 @@ export interface IERC20Errors extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
+  getUri: TypedContractMethod<[], [string], "view">;
+
+  name: TypedContractMethod<[], [string], "view">;
+
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
+
+  getFunction(
+    nameOrSignature: "getUri"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "name"
+  ): TypedContractMethod<[], [string], "view">;
 
   filters: {};
 }
