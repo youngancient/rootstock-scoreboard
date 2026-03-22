@@ -2,8 +2,7 @@
 import { AdminRole, FETCH_STATUS, GOVERNANCE_TOKEN, TEAM_MANAGER_ADDRESS } from '@/constants'
 import { useAuth } from '@/context/AuthContext'
 import { ICreateTeam, ITeam } from '@/interface/ITeam'
-import { TeamsManagerCore, TeamsManagerCore__factory } from '@/typechain-types'
-import { ABI_ERC20 } from '@/utils/Abi'
+import { ABI_ERC20, ABI_TEAMS_MANAGER } from '@/utils/Abi'
 import { ethers } from 'ethers'
 import { DecodedError, ErrorDecoder } from 'ethers-decode-error'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -23,7 +22,7 @@ const useManager = () => {
 
   const [isLoading, setIsLoading] = useState(FETCH_STATUS.INIT);
   const [contractErrorText, setErrorText] = useState<string>("");
-  const [teamManager, setTeamManager] = useState<TeamsManagerCore>()
+  const [teamManager, setTeamManager] = useState<ethers.Contract>()
   const {
     provider,
     address,
@@ -43,8 +42,9 @@ const useManager = () => {
     if (provider) {
       PROVIDER.current = await provider.getSigner()
     }
-    const teamManager = TeamsManagerCore__factory.connect(
+    const teamManager = new ethers.Contract(
       TEAM_MANAGER_ADDRESS!,
+      ABI_TEAMS_MANAGER,
       PROVIDER.current
     )
 
