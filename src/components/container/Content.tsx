@@ -13,6 +13,7 @@ import Countdown from '../extras/Countdown';
 import AddAdminDialog from '../dialog/AddAdminDialog';
 import KickstartVotingDialog from '../dialog/KickstartDialog';
 import EmergencyDialog from '../dialog/EmergencyDialog';
+import WithdrawDialog from '../dialog/WithdrawDialog';
 import { roleToString } from '@/utils/roleToString';
 import { toast } from 'react-toastify';
 
@@ -31,6 +32,7 @@ function Content() {
   }>({ isAuthorized: false, role: AdminRole.NONE });
   const [isCheckingRole, setIsCheckingRole] = useState(true);
   const [isEmergencyMode, setIsEmergencyMode] = useState(false);
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
 
   useEffect(() => {
     let isCurrent = true;
@@ -55,9 +57,6 @@ function Content() {
     };
   }, [getIsEmergencyMode, getTeams, getVotingStatus, checkAdminPermissions]);
 
-  const handleEmergencyMode = () => {
-    setIsEmergencyModalOpen(true);
-  };
 
   return (
     <>
@@ -125,7 +124,7 @@ function Content() {
             (userStatus.role === AdminRole.SUPER_ADMIN || userStatus.role === AdminRole.RECOVERY_ADMIN) && (
               <div className="flex items-end">
                 <Button
-                  onClick={handleEmergencyMode}
+                  onClick={() => setIsWithdrawModalOpen(true)}
                   variant="secondary"
                   outline
                 >
@@ -137,7 +136,7 @@ function Content() {
             (userStatus.role === AdminRole.SUPER_ADMIN || userStatus.role === AdminRole.RECOVERY_ADMIN) && (
               <div className="flex items-end">
                 <Button
-                  onClick={handleEmergencyMode}
+                  onClick={() => setIsEmergencyModalOpen(true)}
                   variant="secondary"
                   outline
                   width={160}
@@ -185,6 +184,11 @@ function Content() {
         isEmergencyMode={isEmergencyMode}
         userRole={userStatus.role}
         onSuccess={(newStatus) => setIsEmergencyMode(newStatus)}
+      />
+      <WithdrawDialog
+        open={isWithdrawModalOpen}
+        closeDialog={() => setIsWithdrawModalOpen(false)}
+        isEmergencyMode={isEmergencyMode}
       />
     </>
   )
