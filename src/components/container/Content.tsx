@@ -38,26 +38,45 @@ function Content() {
 
   useEffect(() => {
     let isCurrent = true;
-    const init = async () => {
-      setIsCheckingRole(true);
+    const initGlobalData = async () => {
       const contractIsInEmergency = await getIsEmergencyMode();
-      setIsEmergencyMode(contractIsInEmergency);
+      if (isCurrent) setIsEmergencyMode(contractIsInEmergency);
+
+      const status = await getVotingStatus();
+      if (isCurrent && status) {
+        setVotingStatus(status);
+      }
+
       await getTeams();
-      let status = await getVotingStatus();
-      if (isCurrent) {
-        if (status) {
-          setVotingStatus(status);
+    };
+    initGlobalData();
+    return () => {
+      isCurrent = false;
+    };
+  }, [getIsEmergencyMode, getTeams, getVotingStatus]);
+
+  useEffect(() => {
+    let isCurrent = true;
+    const initUserRole = async () => {
+      setIsCheckingRole(true);
+      if (!address) {
+        if (isCurrent) {
+          setUserStatus({ isAuthorized: false, role: AdminRole.NONE });
+          setIsCheckingRole(false);
         }
-        let result = await checkAdminPermissions();
+        return;
+      }
+      const result = await checkAdminPermissions();
+      if (isCurrent) {
         setUserStatus(result);
         setIsCheckingRole(false);
       }
     };
-    init();
+    initUserRole();
     return () => {
       isCurrent = false;
     };
-  }, [getIsEmergencyMode, getTeams, getVotingStatus, checkAdminPermissions]);
+  }, [address, checkAdminPermissions]);
 
 
   return (
