@@ -7,8 +7,9 @@ import { useAuth } from '@/context/AuthContext';
 import TableTokens from './TableTokens';
 import AddTeamDialog from '../dialog/AddTeamDialog';
 import TableLoader from '../loader/TableLoader';
-import { AdminRole } from '@/constants';
+import { AdminRole, GOVERNANCE_TOKEN } from '@/constants';
 import { IVotingStatus } from '@/interface/IVotingStatus';
+import { formatAddress } from '@/utils/formatAddress';
 import Countdown from '../extras/Countdown';
 import AddAdminDialog from '../dialog/AddAdminDialog';
 import KickstartVotingDialog from '../dialog/KickstartDialog';
@@ -33,6 +34,7 @@ function Content() {
   const [isCheckingRole, setIsCheckingRole] = useState(true);
   const [isEmergencyMode, setIsEmergencyMode] = useState(false);
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     let isCurrent = true;
@@ -86,15 +88,47 @@ function Content() {
           </div>
         </div>
         {address && userStatus && (
-          <h2 className="mt-6 text-2xl font-semibold text-gray-100 tracking-wide">
-            Welcome, <span className="text-amber-500 drop-shadow-sm">
-              {isCheckingRole ? (
-                <span className="animate-pulse">...</span>
-              ) : (
-                userStatus.role === AdminRole.NONE ? 'User' : roleToString(userStatus.role)
-              )}
-            </span>{isCheckingRole ? '' : '!'}
-          </h2>
+          <div className="mt-6 flex flex-col gap-3">
+            <h2 className="text-2xl font-semibold text-gray-100 tracking-wide">
+              Welcome, <span className="text-amber-500 drop-shadow-sm">
+                {isCheckingRole ? (
+                  <span className="animate-pulse">...</span>
+                ) : (
+                  userStatus.role === AdminRole.NONE ? 'User' : roleToString(userStatus.role)
+                )}
+              </span>{isCheckingRole ? '' : '!'}
+            </h2>
+
+            {GOVERNANCE_TOKEN && (
+              <div className="flex items-center gap-2 text-sm text-zinc-400">
+                <span>Governance Token:</span>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(GOVERNANCE_TOKEN!);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                  className="flex items-center bg-zinc-800/60 hover:bg-zinc-700/60 border border-zinc-700/50 hover:border-zinc-500/50 transition-colors rounded px-2 py-1 gap-2 group focus:outline-none focus:ring-1 focus:ring-custom-orange cursor-pointer"
+                  title="Copy token address"
+                >
+                  <span className="font-mono text-zinc-300 group-hover:text-white transition-colors">
+                    {formatAddress(GOVERNANCE_TOKEN!)}
+                  </span>
+                  <span className="text-zinc-500 group-hover:text-zinc-300 transition-colors p-0.5 rounded-sm">
+                    {copied ? (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    )}
+                  </span>
+                </button>
+              </div>
+            )}
+          </div>
         )}
         <div className="mt-8 flex gap-4">
           {userStatus.isAuthorized && (
@@ -108,7 +142,7 @@ function Content() {
               </Button>
             </div>
           )}
-          {userStatus.isAuthorized &&
+          {
             (userStatus.role === AdminRole.SUPER_ADMIN || userStatus.role === AdminRole.RECOVERY_ADMIN) && (
               <div className="flex items-end">
                 <Button
@@ -120,7 +154,7 @@ function Content() {
                 </Button>
               </div>
             )}
-          {userStatus.isAuthorized && isEmergencyMode &&
+          {isEmergencyMode &&
             (userStatus.role === AdminRole.SUPER_ADMIN || userStatus.role === AdminRole.RECOVERY_ADMIN) && (
               <div className="flex items-end">
                 <Button
@@ -132,19 +166,18 @@ function Content() {
                 </Button>
               </div>
             )}
-          {userStatus.isAuthorized &&
-            (userStatus.role === AdminRole.SUPER_ADMIN || userStatus.role === AdminRole.RECOVERY_ADMIN) && (
-              <div className="flex items-end">
-                <Button
-                  onClick={() => setIsEmergencyModalOpen(true)}
-                  variant="secondary"
-                  outline
-                  width={160}
-                >
-                  {isEmergencyMode ? "Exit Emergency" : "Enter Emergency"}
-                </Button>
-              </div>
-            )}
+          {(userStatus.role === AdminRole.SUPER_ADMIN || userStatus.role === AdminRole.RECOVERY_ADMIN) && (
+            <div className="flex items-end">
+              <Button
+                onClick={() => setIsEmergencyModalOpen(true)}
+                variant="secondary"
+                outline
+                width={160}
+              >
+                {isEmergencyMode ? "Exit Emergency" : "Enter Emergency"}
+              </Button>
+            </div>
+          )}
         </div>
         <div className='mt-10'>
           <div className='w-full flex justify-between'>

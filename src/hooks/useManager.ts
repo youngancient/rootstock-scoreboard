@@ -192,7 +192,7 @@ const useManager = () => {
       const role = Number(roleValue) as AdminRole;
 
       const isAuthorized =
-        role === AdminRole.VOTE_ADMIN || role === AdminRole.SUPER_ADMIN;
+        role === AdminRole.VOTE_ADMIN || role === AdminRole.RECOVERY_ADMIN || role === AdminRole.SUPER_ADMIN;
       return { isAuthorized, role };
     } catch (error) {
       console.error("Error checking permissions:", error);

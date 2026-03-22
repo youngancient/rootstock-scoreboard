@@ -92,7 +92,11 @@ function AddTeamDialog({ open, closeDialog, isEmergencyMode }: props) {
     }
   }
   return (
-    <BaseDialog open={open} closeDialog={handleCloseDialog} className={`w-[490px] h-[440px] bg-black border border-zinc-700 transition-all duration-200`}>
+    <BaseDialog
+      open={open}
+      closeDialog={handleCloseDialog}
+      className="w-[500px] h-fit min-h-[440px] pb-6 bg-black border border-zinc-700 transition-all duration-200"
+    >
       <div className='w-full h-full flex flex-col'>
         {
           !address &&

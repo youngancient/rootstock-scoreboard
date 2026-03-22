@@ -49,7 +49,7 @@ function EmergencyDialog({ open, closeDialog, isEmergencyMode, userRole, onSucce
     <BaseDialog
       open={open}
       closeDialog={handleCloseDialog}
-      className={`w-[490px] h-[320px] bg-black border border-zinc-700 transition-all duration-200`}
+      className="w-[490px] h-fit min-h-[320px] pb-6 bg-black border border-zinc-700 transition-all duration-200"
     >
       <div className="w-full h-full flex flex-col">
         {!address && (
@@ -64,7 +64,7 @@ function EmergencyDialog({ open, closeDialog, isEmergencyMode, userRole, onSucce
         <ContentDialog
           status={isLoading}
           loadingTitle={isEmergencyMode ? "Resolving Emergency" : "Triggering Emergency"}
-          createdTitle={isEmergencyMode ? "Emergency Resolved" : "Emergency Triggered"}
+          createdTitle={isEmergencyMode ? "Emergency Triggered" : "Emergency Resolved"}
           onClose={handleCloseDialog}
           btnError="Try Again"
           errorText={contractErrorText}

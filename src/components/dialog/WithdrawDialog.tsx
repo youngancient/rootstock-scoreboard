@@ -95,7 +95,6 @@ function WithdrawDialog({ open, closeDialog, isEmergencyMode }: Props) {
       const parsedAmount = ethers.parseEther(amount).toString();
       const isSuccess = await emergencyWithdraw(cleanToken, cleanReceiver, parsedAmount);
       if (!isSuccess) return;
-      // ContentDialog handles the success state automatically when FETCH_STATUS is COMPLETED
     } catch (e) {
       toast.error("Invalid amount format.");
     }
@@ -105,7 +104,7 @@ function WithdrawDialog({ open, closeDialog, isEmergencyMode }: Props) {
     <BaseDialog
       open={open}
       closeDialog={handleCloseDialog}
-      className={`w-[490px] h-[540px] bg-black border border-zinc-700 transition-all duration-200`}
+      className="w-[490px] h-fit min-h-[380px] pb-6 bg-black border border-zinc-700 transition-all duration-200"
     >
       <div className="w-full h-full flex flex-col">
         {!address && (

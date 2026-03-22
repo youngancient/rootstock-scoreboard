@@ -76,7 +76,7 @@ function KickstartVotingDialog({
     <BaseDialog
       open={open}
       closeDialog={handleCloseDialog}
-      className="w-[490px] h-[380px] bg-black border border-zinc-700 transition-all duration-200"
+      className="w-[490px] h-fit min-h-[380px] pb-6 bg-black border border-zinc-700 transition-all duration-200"
     >
       <div className="w-full h-full flex flex-col">
         {!address && (
