@@ -121,17 +121,31 @@ function Content() {
                 </Button>
               </div>
             )}
-            {userStatus.isAuthorized && (
-            <div className="flex items-end">
-              <Button
-                onClick={handleEmergencyMode}
-                variant="secondary"
-                outline
-              >
-                {isEmergencyMode ? "Exit Emergency Mode" : "Enter Emergency Mode"}
-              </Button>
-            </div>
-          )}
+          {userStatus.isAuthorized && isEmergencyMode &&
+            (userStatus.role === AdminRole.SUPER_ADMIN || userStatus.role === AdminRole.RECOVERY_ADMIN) && (
+              <div className="flex items-end">
+                <Button
+                  onClick={handleEmergencyMode}
+                  variant="secondary"
+                  outline
+                >
+                  Withdraw
+                </Button>
+              </div>
+            )}
+          {userStatus.isAuthorized &&
+            (userStatus.role === AdminRole.SUPER_ADMIN || userStatus.role === AdminRole.RECOVERY_ADMIN) && (
+              <div className="flex items-end">
+                <Button
+                  onClick={handleEmergencyMode}
+                  variant="secondary"
+                  outline
+                  width={160}
+                >
+                  {isEmergencyMode ? "Exit Emergency" : "Enter Emergency"}
+                </Button>
+              </div>
+            )}
         </div>
         <div className='mt-10'>
           <div className='w-full flex justify-between'>
