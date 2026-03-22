@@ -11,6 +11,7 @@ interface ITeamComp extends ITeam {
   setDialog: Dispatch<SetStateAction<boolean>>;
   setTeam: Dispatch<SetStateAction<ITeam | undefined>>;
   isVotingActive: boolean;
+  isEmergencyMode: boolean;
 }
 
 export const TeamRowComp: React.FC<ITeamComp> = ({
@@ -24,7 +25,8 @@ export const TeamRowComp: React.FC<ITeamComp> = ({
   team,
   setDialog,
   setTeam,
-  isVotingActive
+  isVotingActive,
+  isEmergencyMode
 }) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
@@ -86,11 +88,11 @@ export const TeamRowComp: React.FC<ITeamComp> = ({
                 setDialog(true);
                 setTeam(team);
               }}
-              disabled={!isVotingActive}
-              className={!isVotingActive ? "opacity-50 cursor-not-allowed grayscale" : ""}
+              disabled={!isVotingActive || isEmergencyMode}
+              className={(!isVotingActive || isEmergencyMode) ? "opacity-50 cursor-not-allowed grayscale" : ""}
               width={80}
             >
-              {isVotingActive ? "Vote" : "Closed"}
+              {isEmergencyMode ? "Paused" : (isVotingActive ? "Vote" : "Closed")}
             </Button>
           </div>
         </td>

@@ -5,7 +5,11 @@ import { ITeam } from '@/interface/ITeam';
 import useManager from '@/hooks/useManager';
 import { TeamRowComp } from './Team';
 
-function TableTokens() {
+interface ITableTokens {
+  isEmergencyMode: boolean;
+}
+
+function TableTokens({ isEmergencyMode }: ITableTokens) {
   const [dialog, setDialog] = useState<boolean>(false);
   const { teams, setTeam } = useAuth();
   const { getVotingStatus } = useManager();
@@ -72,6 +76,7 @@ function TableTokens() {
                 setDialog={setDialog}
                 setTeam={setTeam}
                 isVotingActive={isVotingActive}
+                isEmergencyMode={isEmergencyMode}
               />
               ))
             }

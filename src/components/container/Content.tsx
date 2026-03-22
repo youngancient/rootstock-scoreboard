@@ -189,7 +189,7 @@ function Content() {
             >Add Team</Button>
           </div>
           {
-            teamLoading ? <TableLoader /> : <TableTokens />
+            teamLoading ? <TableLoader /> : <TableTokens isEmergencyMode={isEmergencyMode} />
           }
         </div>
       </section>
