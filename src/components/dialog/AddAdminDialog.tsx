@@ -15,9 +15,11 @@ type Props = {
   open: boolean;
   closeDialog: () => void;
   onSuccess?: () => void;
+  isEmergencyMode: boolean;
+  userRole: AdminRole;
 };
 
-function AddAdminDialog({ open, closeDialog, onSuccess }: Props) {
+function AddAdminDialog({ open, closeDialog, onSuccess, isEmergencyMode, userRole }: Props) {
   const { isLoading, setIsLoading, contractErrorText, assignAdminRole } =
     useManager();
   const { address } = useAuth();
@@ -49,6 +51,10 @@ function AddAdminDialog({ open, closeDialog, onSuccess }: Props) {
   )}`;
 
   const onAddAdmin = async () => {
+    if (!isEmergencyMode && userRole === AdminRole.RECOVERY_ADMIN) {
+      toast.error("Recovery Admin can only add Admins during emergency mode.");
+      return;
+    }
     const cleanAddress = targetAddress.trim().toLowerCase();
     if (!ethers.isAddress(cleanAddress)) {
       toast.error("Please enter a valid wallet address.");
@@ -63,7 +69,7 @@ function AddAdminDialog({ open, closeDialog, onSuccess }: Props) {
       return;
     }
 
-    const isSuccess = await assignAdminRole(cleanAddress, role);
+    const isSuccess = await assignAdminRole(cleanAddress, role, isEmergencyMode);
     if (!isSuccess) return;
     if (onSuccess) onSuccess();
   };
@@ -97,7 +103,16 @@ function AddAdminDialog({ open, closeDialog, onSuccess }: Props) {
                 Add New Admin
               </h2>
 
-              <div className="w-full mt-8 flex flex-col gap-5 px-3">
+              {isEmergencyMode && (
+                <div className="mt-6 mx-3 p-3 bg-red-950/40 border border-red-500/50 rounded-lg flex items-start gap-2 text-sm text-red-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <span><strong>Action enhanced:</strong> Admin roles can be assigned by SUPER_ADMIN or RECOVERY_ADMIN while the system is in Emergency Mode.</span>
+                </div>
+              )}
+
+              <div className="w-full mt-6 flex flex-col gap-5 px-3">
                 <div className="flex flex-col gap-2">
                   <label className="font-bold text-sm text-zinc-400 uppercase">
                     Wallet Address

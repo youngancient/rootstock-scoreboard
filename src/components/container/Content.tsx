@@ -12,26 +12,32 @@ import { IVotingStatus } from '@/interface/IVotingStatus';
 import Countdown from '../extras/Countdown';
 import AddAdminDialog from '../dialog/AddAdminDialog';
 import KickstartVotingDialog from '../dialog/KickstartDialog';
+import EmergencyDialog from '../dialog/EmergencyDialog';
 import { roleToString } from '@/utils/roleToString';
+import { toast } from 'react-toastify';
 
 function Content() {
   const [dialog, setDialog] = useState<boolean>(false);
   const [votingStatus, setVotingStatus] = useState<IVotingStatus | null>(null);
   const [kickstartOpen, setKickstartOpen] = useState<boolean>(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+  const [isEmergencyModalOpen, setIsEmergencyModalOpen] = useState(false);
 
-  const { getTeams, getVotingStatus, checkAdminPermissions } = useManager();
-  const { provider, teamLoading, address } = useAuth();
+  const { getTeams, getVotingStatus, checkAdminPermissions, getIsEmergencyMode } = useManager();
+  const { teamLoading, address } = useAuth();
   const [userStatus, setUserStatus] = useState<{
     isAuthorized: boolean;
     role: AdminRole;
   }>({ isAuthorized: false, role: AdminRole.NONE });
   const [isCheckingRole, setIsCheckingRole] = useState(true);
+  const [isEmergencyMode, setIsEmergencyMode] = useState(false);
 
   useEffect(() => {
     let isCurrent = true;
     const init = async () => {
       setIsCheckingRole(true);
+      const contractIsInEmergency = await getIsEmergencyMode();
+      setIsEmergencyMode(contractIsInEmergency);
       await getTeams();
       let status = await getVotingStatus();
       if (isCurrent) {
@@ -47,11 +53,26 @@ function Content() {
     return () => {
       isCurrent = false;
     };
-  }, [provider, getTeams, getVotingStatus, checkAdminPermissions]);
+  }, [getIsEmergencyMode, getTeams, getVotingStatus, checkAdminPermissions]);
+
+  const handleEmergencyMode = () => {
+    setIsEmergencyModalOpen(true);
+  };
 
   return (
     <>
       <section className='mt-16 pt-5 w-full lg:w-[90%] xl:w-[1300px] m-auto'>
+        {isEmergencyMode && (
+          <div className="mb-8 w-full p-4 rounded-xl bg-red-950/40 border border-red-500/50 flex items-center gap-4 text-red-500 shadow-[0_0_15px_rgba(239,68,68,0.15)] backdrop-blur-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 animate-pulse shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div>
+              <h3 className="font-bold text-lg tracking-wide text-red-400">Emergency Mode Active</h3>
+              <p className="text-sm text-red-400/90 font-medium mt-1">The system is currently in emergency mode. Regular operations might be restricted or paused.</p>
+            </div>
+          </div>
+        )}
         <div className='w-full flex flex-col'>
           <div className='flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6'>
             <div className='flex-1'>
@@ -89,7 +110,7 @@ function Content() {
             </div>
           )}
           {userStatus.isAuthorized &&
-            userStatus.role === AdminRole.SUPER_ADMIN && (
+            (userStatus.role === AdminRole.SUPER_ADMIN || userStatus.role === AdminRole.RECOVERY_ADMIN) && (
               <div className="flex items-end">
                 <Button
                   onClick={() => setIsAdminModalOpen(true)}
@@ -100,6 +121,17 @@ function Content() {
                 </Button>
               </div>
             )}
+            {userStatus.isAuthorized && (
+            <div className="flex items-end">
+              <Button
+                onClick={handleEmergencyMode}
+                variant="secondary"
+                outline
+              >
+                {isEmergencyMode ? "Exit Emergency Mode" : "Enter Emergency Mode"}
+              </Button>
+            </div>
+          )}
         </div>
         <div className='mt-10'>
           <div className='w-full flex justify-between'>
@@ -115,7 +147,7 @@ function Content() {
           }
         </div>
       </section>
-      <AddTeamDialog open={dialog} closeDialog={() => setDialog(false)} />
+      <AddTeamDialog open={dialog} closeDialog={() => setDialog(false)} isEmergencyMode={isEmergencyMode} />
 
       <KickstartVotingDialog
         open={kickstartOpen}
@@ -125,10 +157,20 @@ function Content() {
           if (status) setVotingStatus(status);
         }}
         votingStatus={votingStatus}
+        isEmergencyMode={isEmergencyMode}
       />
       <AddAdminDialog
         open={isAdminModalOpen}
         closeDialog={() => setIsAdminModalOpen(false)}
+        isEmergencyMode={isEmergencyMode}
+        userRole={userStatus.role}
+      />
+      <EmergencyDialog
+        open={isEmergencyModalOpen}
+        closeDialog={() => setIsEmergencyModalOpen(false)}
+        isEmergencyMode={isEmergencyMode}
+        userRole={userStatus.role}
+        onSuccess={(newStatus) => setIsEmergencyMode(newStatus)}
       />
     </>
   )

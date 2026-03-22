@@ -202,7 +202,7 @@ const useManager = () => {
     }
   }, [address, initializeProvider]);
 
-  const assignAdminRole = useCallback(async (targetAddress: string, role: AdminRole) => {
+  const assignAdminRole = useCallback(async (targetAddress: string, role: AdminRole, isEmergencyMode: boolean) => {
     try {
       setIsLoading(FETCH_STATUS.WAIT_WALLET);
 
@@ -210,8 +210,12 @@ const useManager = () => {
         toast.error("Invalid wallet address!");
         return false;
       }
-
-      const response = await teamManager?.addAdmin(targetAddress, role);
+      let response;
+      if (isEmergencyMode) {
+        response = await teamManager?.emergencyAddAdmin(targetAddress, role);
+      }else{
+        response = await teamManager?.addAdmin(targetAddress, role);
+      }
 
       setIsLoading(FETCH_STATUS.WAIT_TX);
       setTx(response);
@@ -228,6 +232,20 @@ const useManager = () => {
       return false;
     }
   }, [teamManager]);
+
+  const getIsEmergencyMode = useCallback(async () => {
+    try {
+      const manager = await initializeProvider();
+      if (!manager) return false;
+      const status:boolean = await manager.emergencyMode();
+      return status;
+    } catch (error) {
+      console.error("Error fetching emergency mode:", error);
+      const decodedError: DecodedError = await errorDecoder.decode(error);
+      toast.error(decodedError.reason || "Failed to fetch emergency mode");
+      return false;
+    }
+  }, [initializeProvider]);
 
   const triggerEmergencyMode = useCallback(async () => {
     try {
@@ -302,7 +320,8 @@ const useManager = () => {
     assignAdminRole,
     triggerEmergencyMode,
     emergencyWithdraw,
-    resolveEmergency
+    resolveEmergency,
+    getIsEmergencyMode
   }
 }
 
