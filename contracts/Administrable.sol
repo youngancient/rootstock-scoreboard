@@ -40,7 +40,8 @@ contract Administrable is ReentrancyGuard {
     uint256 public totalAdmins;
 
     // Emergency system
-    bool public emergencyMode = false;
+    bool private _emergencyMode = false;
+    uint256 public constant EMERGENCY_TIMEOUT = 7 days;
     address public emergencyTriggeredBy;
     uint256 public emergencyStartTime;
 
@@ -75,12 +76,12 @@ contract Administrable is ReentrancyGuard {
     }
 
     modifier notInEmergency() {
-        require(!emergencyMode, "Contract is in emergency mode");
+        require(!emergencyMode(), "Contract is in emergency mode");
         _;
     }
 
     modifier onlyInEmergency() {
-        require(emergencyMode, "Emergency mode required");
+        require(emergencyMode(), "Emergency mode required");
         _;
     }
 
@@ -170,7 +171,7 @@ contract Administrable is ReentrancyGuard {
      * @dev Trigger emergency mode
      */
     function triggerEmergency() external onlyRole(AdminRole.RECOVERY_ADMIN) {
-        emergencyMode = true;
+        _emergencyMode = true;
         emergencyTriggeredBy = msg.sender;
         emergencyStartTime = block.timestamp;
 
@@ -181,7 +182,7 @@ contract Administrable is ReentrancyGuard {
      * @dev Resolve emergency mode
      */
     function resolveEmergency() external onlySuperAdmin onlyInEmergency {
-        emergencyMode = false;
+        _emergencyMode = false;
         emergencyTriggeredBy = address(0);
         emergencyStartTime = 0;
 
@@ -210,6 +211,11 @@ contract Administrable is ReentrancyGuard {
     }
 
     // ============ VIEW FUNCTIONS ============
+
+    function emergencyMode() public view returns (bool) {
+        if (!_emergencyMode) return false;
+        return block.timestamp <= emergencyStartTime + EMERGENCY_TIMEOUT;
+    }
 
     function isAdmin(address _address) public view returns (bool) {
         return adminInfo[_address].role != AdminRole.NONE && adminInfo[_address].isActive;
