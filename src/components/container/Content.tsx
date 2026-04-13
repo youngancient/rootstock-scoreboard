@@ -185,7 +185,7 @@ function Content() {
                 </Button>
               </div>
             )}
-          {(userStatus.role === AdminRole.SUPER_ADMIN || userStatus.role === AdminRole.RECOVERY_ADMIN) && (
+          {((isEmergencyMode && userStatus.role === AdminRole.SUPER_ADMIN) || (!isEmergencyMode && userStatus.role === AdminRole.RECOVERY_ADMIN)) && (
             <div className="flex items-end">
               <Button
                 onClick={() => setIsEmergencyModalOpen(true)}
