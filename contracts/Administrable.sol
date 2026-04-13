@@ -11,6 +11,12 @@ contract Administrable is ReentrancyGuard {
 
     // ============ ENUMS ============
 
+    /**
+     * @dev WARNING: The ordering of this enum is critical for Role-Based Access Control (RBAC).
+     * Access modifiers such as `onlyRole` use `>=` comparisons against the underlying integer
+     * values. Changing the order or inserting new roles between existing ones will silently break
+     * the access control hierarchy. Strict hierarchy is maintained in ascending power.
+     */
     enum AdminRole {
         NONE,           // 0 - Not an admin
         TEAM_MANAGER,   // 1 - Can only manage teams
@@ -53,6 +59,9 @@ contract Administrable is ReentrancyGuard {
         _;
     }
 
+    /**
+     * @dev Asserts a minimum role hierarchy required. Inherits privilege based on the integer order defined in `AdminRole`.
+     */
     modifier onlyRole(AdminRole minRole) {
         require(adminInfo[msg.sender].role >= minRole && adminInfo[msg.sender].isActive,
                 "Insufficient admin privileges");
@@ -160,11 +169,7 @@ contract Administrable is ReentrancyGuard {
     /**
      * @dev Trigger emergency mode
      */
-    function triggerEmergency() external {
-        require(
-            adminInfo[msg.sender].role == AdminRole.RECOVERY_ADMIN && adminInfo[msg.sender].isActive,
-            "Only recovery admin can trigger emergency"
-        );
+    function triggerEmergency() external onlyRole(AdminRole.RECOVERY_ADMIN) {
         emergencyMode = true;
         emergencyTriggeredBy = msg.sender;
         emergencyStartTime = block.timestamp;
