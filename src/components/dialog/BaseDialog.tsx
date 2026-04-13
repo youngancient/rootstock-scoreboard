@@ -43,6 +43,7 @@ function BaseDialog({ children, closeDialog, className, open, titleId = "dialog-
       <button
         className='absolute w-[20px] right-2 text-[20px] font-semibold top-4'
         id="close-btn"
+        aria-label="Close dialog"
         onClick={() => closeDialog()}
       >
         <XIcon className='stroke-white' />

@@ -310,6 +310,35 @@ describe("Administrable - Basic Admin Management Tests", function () {
       ).to.be.revertedWith("Emergency mode required");
     });
 
+    it("Should prevent non-super-admin from resolving emergency", async function () {
+      await administrable.connect(admin1).triggerEmergency();
+
+      await expect(
+        administrable.connect(admin1).resolveEmergency(),
+      ).to.be.revertedWith("Only super admin can perform this action");
+
+      await expect(
+        administrable.connect(nonAdmin).resolveEmergency(),
+      ).to.be.revertedWith("Only super admin can perform this action");
+    });
+
+    it("Should resume normal operations after emergency is resolved", async function () {
+      await administrable.connect(admin1).triggerEmergency();
+      expect(await administrable.emergencyMode()).to.be.true;
+
+      await expect(
+        administrable.connect(owner).addAdmin(newAdmin.address, AdminRole.TEAM_MANAGER),
+      ).to.be.revertedWith("Contract is in emergency mode");
+
+      await administrable.connect(owner).resolveEmergency();
+      expect(await administrable.emergencyMode()).to.be.false;
+
+      await expect(
+        administrable.connect(owner).addAdmin(newAdmin.address, AdminRole.TEAM_MANAGER),
+      ).to.emit(administrable, "AdminAdded")
+       .withArgs(newAdmin.address, AdminRole.TEAM_MANAGER);
+    });
+
     it("Should allow emergency admin addition during emergency", async function () {
       await administrable.connect(admin1).triggerEmergency();
 
