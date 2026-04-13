@@ -26,14 +26,13 @@ function Content() {
   const [isEmergencyModalOpen, setIsEmergencyModalOpen] = useState(false);
 
   const { getTeams, getVotingStatus, checkAdminPermissions, getIsEmergencyMode } = useManager();
-  const { teamLoading, address } = useAuth();
+  const { teamLoading, address, isEmergencyMode, setIsEmergencyMode } = useAuth();
   const [userStatus, setUserStatus] = useState<{
     isAdminAuthorized: boolean;
     isVotingAuthorized: boolean;
     role: AdminRole;
   }>({ isAdminAuthorized: false, isVotingAuthorized: false, role: AdminRole.NONE });
   const [isCheckingRole, setIsCheckingRole] = useState(true);
-  const [isEmergencyMode, setIsEmergencyMode] = useState(false);
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -54,7 +53,7 @@ function Content() {
     return () => {
       isCurrent = false;
     };
-  }, [getIsEmergencyMode, getTeams, getVotingStatus]);
+  }, [getIsEmergencyMode, getTeams, getVotingStatus, setIsEmergencyMode]);
 
   useEffect(() => {
     let isCurrent = true;
@@ -211,11 +210,11 @@ function Content() {
             )}
           </div>
           {
-            teamLoading ? <TableLoader /> : <TableTokens isEmergencyMode={isEmergencyMode} />
+            teamLoading ? <TableLoader /> : <TableTokens />
           }
         </div>
       </section>
-      <AddTeamDialog open={dialog} closeDialog={() => setDialog(false)} isEmergencyMode={isEmergencyMode} />
+      <AddTeamDialog open={dialog} closeDialog={() => setDialog(false)} />
 
       <KickstartVotingDialog
         open={kickstartOpen}
@@ -225,25 +224,20 @@ function Content() {
           if (status) setVotingStatus(status);
         }}
         votingStatus={votingStatus}
-        isEmergencyMode={isEmergencyMode}
       />
       <AddAdminDialog
         open={isAdminModalOpen}
         closeDialog={() => setIsAdminModalOpen(false)}
-        isEmergencyMode={isEmergencyMode}
         userRole={userStatus.role}
       />
       <EmergencyDialog
         open={isEmergencyModalOpen}
         closeDialog={() => setIsEmergencyModalOpen(false)}
-        isEmergencyMode={isEmergencyMode}
         userRole={userStatus.role}
-        onSuccess={(newStatus) => setIsEmergencyMode(newStatus)}
       />
       <WithdrawDialog
         open={isWithdrawModalOpen}
         closeDialog={() => setIsWithdrawModalOpen(false)}
-        isEmergencyMode={isEmergencyMode}
       />
     </>
   )

@@ -11,14 +11,12 @@ import { toast } from "react-toastify";
 type Props = {
   open: boolean;
   closeDialog: () => void;
-  isEmergencyMode: boolean;
   userRole: AdminRole;
-  onSuccess: (newStatus: boolean) => void;
 };
 
-function EmergencyDialog({ open, closeDialog, isEmergencyMode, userRole, onSuccess }: Props) {
+function EmergencyDialog({ open, closeDialog, userRole }: Props) {
   const { isLoading, setIsLoading, contractErrorText, triggerEmergencyMode, resolveEmergency } = useManager();
-  const { address } = useAuth();
+  const { address, isEmergencyMode, setIsEmergencyMode } = useAuth();
 
   const handleCloseDialog = () => {
     setIsLoading(FETCH_STATUS.INIT);
@@ -33,7 +31,7 @@ function EmergencyDialog({ open, closeDialog, isEmergencyMode, userRole, onSucce
       }
       const success = await resolveEmergency();
       if (!success) return;
-      onSuccess(false);
+      setIsEmergencyMode(false);
     } else {
       if (userRole !== AdminRole.RECOVERY_ADMIN) {
         toast.error("Only a Recovery Admin can trigger an emergency.");
@@ -41,7 +39,7 @@ function EmergencyDialog({ open, closeDialog, isEmergencyMode, userRole, onSucce
       }
       const success = await triggerEmergencyMode();
       if (!success) return;
-      onSuccess(true);
+      setIsEmergencyMode(true);
     }
   };
 

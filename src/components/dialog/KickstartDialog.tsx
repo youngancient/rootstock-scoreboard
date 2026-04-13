@@ -15,7 +15,6 @@ type Props = {
   closeDialog: () => void;
   onSuccess: () => void;
   votingStatus: IVotingStatus | null;
-  isEmergencyMode: boolean;
 };
 
 function KickstartVotingDialog({
@@ -23,7 +22,6 @@ function KickstartVotingDialog({
   closeDialog,
   onSuccess,
   votingStatus,
-  isEmergencyMode,
 }: Props) {
   const {
     isLoading,
@@ -32,7 +30,7 @@ function KickstartVotingDialog({
     contractErrorText,
     kickStartVoting,
   } = useManager();
-  const { address } = useAuth();
+  const { address, isEmergencyMode } = useAuth();
 
   // Local state for the form
   const [value, setValue] = useState<number>(1);

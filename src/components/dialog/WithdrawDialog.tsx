@@ -14,12 +14,11 @@ import { toast } from "react-toastify";
 type Props = {
   open: boolean;
   closeDialog: () => void;
-  isEmergencyMode: boolean;
 };
 
-function WithdrawDialog({ open, closeDialog, isEmergencyMode }: Props) {
+function WithdrawDialog({ open, closeDialog }: Props) {
   const { isLoading, setIsLoading, contractErrorText, emergencyWithdraw, getTokenDecimals } = useManager();
-  const { address, provider } = useAuth();
+  const { address, provider, isEmergencyMode } = useAuth();
 
   const [tokenAddress, setTokenAddress] = useState<string>("");
   const [receiver, setReceiver] = useState<string>(address || "");

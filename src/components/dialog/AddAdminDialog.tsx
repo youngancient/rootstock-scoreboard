@@ -16,14 +16,13 @@ type Props = {
   open: boolean;
   closeDialog: () => void;
   onSuccess?: () => void;
-  isEmergencyMode: boolean;
   userRole: AdminRole;
 };
 
-function AddAdminDialog({ open, closeDialog, onSuccess, isEmergencyMode, userRole }: Props) {
+function AddAdminDialog({ open, closeDialog, onSuccess, userRole }: Props) {
   const { isLoading, setIsLoading, contractErrorText, assignAdminRole } =
     useManager();
-  const { address } = useAuth();
+  const { address, isEmergencyMode } = useAuth();
 
   const [targetAddress, setTargetAddress] = useState<string>("");
   const [role, setRole] = useState<AdminRole>(AdminRole.TEAM_MANAGER);

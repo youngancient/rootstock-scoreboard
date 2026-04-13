@@ -1,6 +1,7 @@
 import { ITeam } from "@/interface/ITeam";
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import Button from "../common/Button";
+import { useAuth } from "@/context/AuthContext";
 import CopyContent from "./CopyContent";
 import { getImageFromURI } from "@/utils/getImageFromUri";
 import { DUMMY_TOKEN_IMAGE } from "@/constants";
@@ -11,7 +12,6 @@ interface ITeamComp extends ITeam {
   setDialog: Dispatch<SetStateAction<boolean>>;
   setTeam: Dispatch<SetStateAction<ITeam | undefined>>;
   isVotingActive: boolean;
-  isEmergencyMode: boolean;
 }
 
 export const TeamRowComp: React.FC<ITeamComp> = ({
@@ -26,8 +26,8 @@ export const TeamRowComp: React.FC<ITeamComp> = ({
   setDialog,
   setTeam,
   isVotingActive,
-  isEmergencyMode
 }) => {
+  const { isEmergencyMode } = useAuth();
   const [imageUrl, setImageUrl] = useState<string | null>(null);
 
   useEffect(() => {

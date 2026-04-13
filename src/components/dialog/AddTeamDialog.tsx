@@ -14,7 +14,6 @@ import { toast } from 'react-toastify'
 type props = {
   open: boolean
   closeDialog: Function
-  isEmergencyMode: boolean
 }
 const STEP_STATUS = {
   INIT: 0,
@@ -26,9 +25,9 @@ const CREATE_TEAM_STATE: ICreateTeam = {
   memeTokenAddress: '',
 }
 
-function AddTeamDialog({ open, closeDialog, isEmergencyMode }: props) {
+function AddTeamDialog({ open, closeDialog }: props) {
   const { isLoading, setIsLoading, addTeam, getTeams, contractErrorText } = useManager();
-  const { address, teams } = useAuth();
+  const { address, teams, isEmergencyMode } = useAuth();
   const [formCompleted, setFormCompleted] = useState<boolean>(true);
   const [validAddress, setValidAddress] = useState<boolean>(true);
   const [createTeam, setCreateTeam] = useState<ICreateTeam>(CREATE_TEAM_STATE);
