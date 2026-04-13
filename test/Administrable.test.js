@@ -272,14 +272,22 @@ describe("Administrable - Basic Admin Management Tests", function () {
       expect(await administrable.emergencyStartTime()).to.be.gt(0);
     });
 
-    it("Should prevent non-recovery-admin from triggering emergency", async function () {
+    it("Should prevent lower-tier admins and non-admins from triggering emergency", async function () {
+      await administrable.connect(owner).changeAdminRole(admin2.address, AdminRole.VOTE_ADMIN);
+
       await expect(
         administrable.connect(admin2).triggerEmergency(),
-      ).to.be.revertedWith("Only recovery admin can trigger emergency");
+      ).to.be.revertedWith("Insufficient admin privileges");
 
       await expect(
         administrable.connect(nonAdmin).triggerEmergency(),
-      ).to.be.revertedWith("Only recovery admin can trigger emergency");
+      ).to.be.revertedWith("Insufficient admin privileges");
+    });
+
+    it("Should allow super admin to trigger emergency", async function () {
+      await expect(administrable.connect(owner).triggerEmergency())
+        .to.emit(administrable, "EmergencyModeToggled")
+        .withArgs(true, owner.address);
     });
 
     it("Should allow super admin to resolve emergency", async function () {
@@ -319,12 +327,41 @@ describe("Administrable - Basic Admin Management Tests", function () {
       );
     });
 
+    it("Should prevent recovery admin from assigning a role higher than theirs during emergency", async function () {
+      await administrable.connect(admin1).triggerEmergency();
+
+      await expect(
+        administrable
+          .connect(admin1)
+          .emergencyAddAdmin(newAdmin.address, AdminRole.SUPER_ADMIN),
+      ).to.be.revertedWith("Cannot grant role higher than own");
+    });
+
     it("Should prevent emergency admin addition when not in emergency", async function () {
       await expect(
         administrable
           .connect(admin1)
           .emergencyAddAdmin(newAdmin.address, AdminRole.RECOVERY_ADMIN),
       ).to.be.revertedWith("Emergency mode required");
+    });
+
+    it("Should auto-resolve emergency mode after 7 days timeout", async function () {
+      await administrable.connect(admin1).triggerEmergency();
+      expect(await administrable.emergencyMode()).to.be.true;
+
+      // Fast forward 7 days and 1 second
+      await ethers.provider.send("evm_increaseTime", [7 * 24 * 60 * 60 + 1]);
+      await ethers.provider.send("evm_mine", []);
+
+      // Should automatically be resolved
+      expect(await administrable.emergencyMode()).to.be.false;
+
+      // Normal operations should resume
+      await expect(
+        administrable
+          .connect(owner)
+          .changeAdminRole(admin2.address, AdminRole.VOTE_ADMIN),
+      ).to.not.be.reverted;
     });
 
     it("Should prevent normal operations during emergency", async function () {

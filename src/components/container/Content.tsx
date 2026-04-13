@@ -28,9 +28,10 @@ function Content() {
   const { getTeams, getVotingStatus, checkAdminPermissions, getIsEmergencyMode } = useManager();
   const { teamLoading, address } = useAuth();
   const [userStatus, setUserStatus] = useState<{
-    isAuthorized: boolean;
+    isAdminAuthorized: boolean;
+    isVotingAuthorized: boolean;
     role: AdminRole;
-  }>({ isAuthorized: false, role: AdminRole.NONE });
+  }>({ isAdminAuthorized: false, isVotingAuthorized: false, role: AdminRole.NONE });
   const [isCheckingRole, setIsCheckingRole] = useState(true);
   const [isEmergencyMode, setIsEmergencyMode] = useState(false);
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
@@ -61,7 +62,7 @@ function Content() {
       setIsCheckingRole(true);
       if (!address) {
         if (isCurrent) {
-          setUserStatus({ isAuthorized: false, role: AdminRole.NONE });
+          setUserStatus({ isAdminAuthorized: false, isVotingAuthorized: false, role: AdminRole.NONE });
           setIsCheckingRole(false);
         }
         return;
@@ -150,7 +151,7 @@ function Content() {
           </div>
         )}
         <div className="mt-8 flex gap-4">
-          {userStatus.isAuthorized && (
+          {userStatus.isVotingAuthorized && (
             <div className="flex items-end">
               <Button
                 onClick={() => setKickstartOpen(true)}
@@ -201,11 +202,13 @@ function Content() {
         <div className='mt-10'>
           <div className='w-full flex justify-between'>
             <h2 className='text-2xl font-bold'>Teams List</h2>
-            <Button
-              onClick={() => setDialog(true)}
-              variant='secondary'
-              outline
-            >Add Team</Button>
+            {userStatus.isAdminAuthorized && (
+              <Button
+                onClick={() => setDialog(true)}
+                variant='secondary'
+                outline
+              >Add Team</Button>
+            )}
           </div>
           {
             teamLoading ? <TableLoader /> : <TableTokens isEmergencyMode={isEmergencyMode} />

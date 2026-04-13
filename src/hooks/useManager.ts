@@ -96,9 +96,9 @@ const useManager = () => {
       const decodedError: DecodedError = await errorDecoder.decode(error);
       toast.error(decodedError.reason);
     }
-  }, [initializeProvider,address, provider]);
+  }, [initializeProvider, address, provider]);
 
-  const addVote = useCallback(async (teamName: string, amount:number) => {
+  const addVote = useCallback(async (teamName: string, amount: number) => {
     try {
       const decimals = await contract!.decimals();
       const value = ethers.parseUnits(amount.toString(), Number(decimals));
@@ -124,7 +124,7 @@ const useManager = () => {
       setErrorText(decodedError.reason || "Failed to add vote!");
       setIsLoading(FETCH_STATUS.ERROR)
     }
-  }, [address, contract, provider,teamManager]);
+  }, [address, contract, provider, teamManager]);
 
   const addTeam = useCallback(async (team: ICreateTeam) => {
     const { teamLeaderAddress, teamName, memeTokenAddress } = team;
@@ -192,21 +192,24 @@ const useManager = () => {
   const checkAdminPermissions = useCallback(async () => {
     const manager = await initializeProvider();
     if (!address || !manager)
-      return { isAuthorized: false, role: AdminRole.NONE };
+      return { isAdminAuthorized: false, isVotingAuthorized: false, role: AdminRole.NONE };
 
     try {
       const roleValue = await manager.getAdminRole(address);
 
       const role = Number(roleValue) as AdminRole;
 
-      const isAuthorized =
-        role === AdminRole.VOTE_ADMIN || role === AdminRole.RECOVERY_ADMIN || role === AdminRole.SUPER_ADMIN;
-      return { isAuthorized, role };
+      const isVotingAuthorized =
+        role >= AdminRole.VOTE_ADMIN;
+      const isAdminAuthorized =
+        role >= AdminRole.TEAM_MANAGER;
+
+      return { isAdminAuthorized, isVotingAuthorized, role };
     } catch (error) {
       console.error("Error checking permissions:", error);
       const decodedError: DecodedError = await errorDecoder.decode(error);
       toast.error(decodedError.reason || "Failed to fetch User permissions");
-      return { isAuthorized: false, role: AdminRole.NONE };
+      return { isAdminAuthorized: false, isVotingAuthorized: false, role: AdminRole.NONE };
     }
   }, [address, initializeProvider]);
 
@@ -221,7 +224,7 @@ const useManager = () => {
       let response;
       if (isEmergencyMode) {
         response = await teamManager?.emergencyAddAdmin(targetAddress, role);
-      }else{
+      } else {
         response = await teamManager?.addAdmin(targetAddress, role);
       }
 
@@ -245,7 +248,7 @@ const useManager = () => {
     try {
       const manager = await initializeProvider();
       if (!manager) return false;
-      const status:boolean = await manager.emergencyMode();
+      const status: boolean = await manager.emergencyMode();
       return status;
     } catch (error) {
       console.error("Error fetching emergency mode:", error);
@@ -307,7 +310,7 @@ const useManager = () => {
     }
   }, [provider]);
 
-  const emergencyWithdraw = useCallback(async (tokenAddress: string, receiver : string, amount : string) => {
+  const emergencyWithdraw = useCallback(async (tokenAddress: string, receiver: string, amount: string) => {
     try {
       setIsLoading(FETCH_STATUS.WAIT_WALLET);
       const response = await teamManager?.emergencyWithdraw(tokenAddress, receiver, amount);
@@ -319,9 +322,9 @@ const useManager = () => {
       setIsLoading(FETCH_STATUS.COMPLETED);
       return true;
     } catch (error) {
-      console.error("Error triggering emergency mode:", error);
+      console.error("Error processing emergency withdrawal:", error);
       const decodedError = await errorDecoder.decode(error);
-      setErrorText(decodedError.reason || "Failed to trigger emergency mode");
+      setErrorText(decodedError.reason || "Failed to process emergency withdrawal");
       setIsLoading(FETCH_STATUS.ERROR);
       return false;
     }
