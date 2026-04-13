@@ -190,6 +190,7 @@ contract Administrable is ReentrancyGuard {
         require(admin != address(0), "Invalid admin address");
         require(adminInfo[admin].role == AdminRole.NONE, "Already an admin");
         require(role != AdminRole.NONE, "Invalid role");
+        require(role <= adminInfo[msg.sender].role, "Cannot grant role higher than own");
 
         adminInfo[admin] = AdminInfo({
             role: role,
