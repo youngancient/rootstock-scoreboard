@@ -18,7 +18,7 @@ type Props = {
 };
 
 function WithdrawDialog({ open, closeDialog, isEmergencyMode }: Props) {
-  const { isLoading, setIsLoading, contractErrorText, emergencyWithdraw } = useManager();
+  const { isLoading, setIsLoading, contractErrorText, emergencyWithdraw, getTokenDecimals } = useManager();
   const { address, provider } = useAuth();
 
   const [tokenAddress, setTokenAddress] = useState<string>("");
@@ -26,6 +26,7 @@ function WithdrawDialog({ open, closeDialog, isEmergencyMode }: Props) {
   const [amount, setAmount] = useState<string>("");
   const [tokenBalance, setTokenBalance] = useState<string | null>(null);
   const [tokenSymbol, setTokenSymbol] = useState<string>("");
+  const [isConfirming, setIsConfirming] = useState<boolean>(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -66,10 +67,11 @@ function WithdrawDialog({ open, closeDialog, isEmergencyMode }: Props) {
     setAmount("");
     setTokenBalance(null);
     setTokenSymbol("");
+    setIsConfirming(false);
     closeDialog();
   };
 
-  const onWithdraw = async () => {
+  const handleReview = () => {
     if (!isEmergencyMode) {
       toast.error("Emergency withdrawals are only permitted during active emergency mode.");
       return;
@@ -91,12 +93,22 @@ function WithdrawDialog({ open, closeDialog, isEmergencyMode }: Props) {
       return;
     }
 
+    setIsConfirming(true);
+  };
+
+  const handleSubmitWithdraw = async () => {
+    const cleanToken = tokenAddress.trim().toLowerCase();
+    const cleanReceiver = receiver.trim().toLowerCase();
+
     try {
-      const parsedAmount = ethers.parseEther(amount).toString();
+      const decimals = await getTokenDecimals(cleanToken);
+      const parsedAmount = ethers.parseUnits(amount, decimals).toString();
       const isSuccess = await emergencyWithdraw(cleanToken, cleanReceiver, parsedAmount);
-      if (!isSuccess) return;
-    } catch (e) {
-      toast.error("Invalid amount format.");
+      if (isSuccess) {
+        setIsConfirming(false);
+      }
+    } catch (e: any) {
+      toast.error(e.message || "Invalid amount format.");
     }
   };
 
@@ -138,7 +150,8 @@ function WithdrawDialog({ open, closeDialog, isEmergencyMode }: Props) {
                 </div>
               )}
 
-              <div className={`w-full ${isEmergencyMode ? 'mt-8' : 'mt-4'} flex flex-col gap-4 px-3`}>
+              {!isConfirming ? (
+                <div className={`w-full ${isEmergencyMode ? 'mt-8' : 'mt-4'} flex flex-col gap-4 px-3`}>
                 <div className="flex flex-col gap-2">
                   <label className="font-bold text-sm text-zinc-400 uppercase">
                     Token Address
@@ -185,24 +198,72 @@ function WithdrawDialog({ open, closeDialog, isEmergencyMode }: Props) {
                   />
                 </div>
 
-                <p className="text-zinc-500 text-[11px] italic mt-1">
-                  * Funds will be transferred directly to the receiver. This action cannot be reversed. Assumes 18 decimals for token amount mapping.
-                </p>
-              </div>
+                  <p className="text-zinc-500 text-[11px] italic mt-1">
+                    * Funds will be transferred directly to the receiver. This action cannot be reversed.
+                  </p>
+                </div>
+              ) : (
+                <div className={`w-full ${isEmergencyMode ? 'mt-8' : 'mt-4'} flex flex-col gap-4 px-3`}>
+                  <div className="bg-zinc-900 border border-zinc-700 rounded p-4 flex flex-col gap-3">
+                    <h3 className="text-white font-bold text-lg mb-2">Review Withdrawal</h3>
+
+                    <div className="flex flex-col gap-1">
+                      <span className="text-zinc-400 text-xs uppercase font-bold">Token Address</span>
+                      <span className="text-white text-sm font-mono bg-black p-2 rounded border border-zinc-800 break-all">{tokenAddress}</span>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <span className="text-zinc-400 text-xs uppercase font-bold">Receiver Address</span>
+                      <span className="text-white text-sm font-mono bg-black p-2 rounded border border-zinc-800 break-all">{receiver}</span>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <span className="text-zinc-400 text-xs uppercase font-bold">Amount</span>
+                      <span className="text-red-400 text-lg font-bold bg-black p-2 rounded border border-zinc-800">
+                        {amount} {tokenSymbol}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-yellow-950/40 border border-yellow-500/50 rounded flex items-start gap-2 text-sm text-yellow-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span><strong>Please confirm:</strong> This transaction is irreversible. The tokens will be permanently transferred to the specified receiver.</span>
+                  </div>
+                </div>
+              )}
 
               <div className="w-full flex mt-6 justify-between px-2">
-                <Button outline onClick={handleCloseDialog} width={100} ariaLabel="Cancel and close dialog">
-                  Cancel
-                </Button>
-                <Button
-                  onClick={onWithdraw}
-                  variant="primary"
-                  className={!isEmergencyMode ? 'opacity-50 cursor-not-allowed' : ''}
-                  disabled={!isEmergencyMode}
-                  width={200}
-                >
-                  Confirm Withdraw
-                </Button>
+                {!isConfirming ? (
+                  <>
+                    <Button outline onClick={handleCloseDialog} width={100} ariaLabel="Cancel and close dialog">
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleReview}
+                      variant="primary"
+                      className={!isEmergencyMode ? 'opacity-50 cursor-not-allowed' : ''}
+                      disabled={!isEmergencyMode}
+                      width={200}
+                    >
+                      Review Withdraw
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button outline onClick={() => setIsConfirming(false)} width={100} ariaLabel="Back to edit">
+                      Back
+                    </Button>
+                    <Button
+                      onClick={handleSubmitWithdraw}
+                      variant="primary"
+                      width={200}
+                    >
+                      Confirm Transaction
+                    </Button>
+                  </>
+                )}
               </div>
             </>
           }

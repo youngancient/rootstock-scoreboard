@@ -62,8 +62,8 @@ const useManager = () => {
       const tokenContract = new ethers.Contract(GOVERNANCE_TOKEN!, ABI_ERC20, signer);
       setContract(tokenContract);
       const balance = await tokenContract.balanceOf(address);
-      const decimals = 18;
-      const formattedBalance = ethers.formatUnits(balance, decimals);
+      const decimals = await tokenContract.decimals();
+      const formattedBalance = ethers.formatUnits(balance, Number(decimals));
       setTokenBalance(Number(formattedBalance));
     }
 
@@ -71,6 +71,10 @@ const useManager = () => {
       setTeamLoading(true);
       const teamManager = await initializeProvider()
       const items = await teamManager?.getTeamNames();
+
+      const tokenContract = new ethers.Contract(GOVERNANCE_TOKEN!, ABI_ERC20, teamManager?.runner);
+      const decimals = await tokenContract.decimals();
+
       const teamsDetail: ITeam[] = [];
       for (const team in items) {
         const detail = await teamManager?.getTeamInfo(items[team]);
@@ -82,7 +86,7 @@ const useManager = () => {
           memeTokenAddress: detail[3],
           leaderAddress: detail[4],
         }
-        newTeam.score = Number(ethers.formatEther(score));
+        newTeam.score = Number(ethers.formatUnits(score, Number(decimals)));
         if (newTeam.teamName) teamsDetail.push(newTeam);
       }
       setTeams(teamsDetail);
@@ -95,11 +99,12 @@ const useManager = () => {
   }, [initializeProvider,address, provider]);
 
   const addVote = useCallback(async (teamName: string, amount:number) => {
-    const value = ethers.parseEther(amount.toString());
     try {
+      const decimals = await contract!.decimals();
+      const value = ethers.parseUnits(amount.toString(), Number(decimals));
       setIsLoading(FETCH_STATUS.WAIT_WALLET)
       const allowance = await contract!.allowance(address, TEAM_MANAGER_ADDRESS);
-      if (Number(ethers.formatEther(allowance)) < 1) {
+      if (Number(ethers.formatUnits(allowance, Number(decimals))) < 1) {
         setPermissions(true);
         const approve = await contract!.approve(TEAM_MANAGER_ADDRESS, DEFAULT_ALLOWANCE);
         const receipt = await provider?.waitForTransaction(approve.hash);
@@ -166,11 +171,14 @@ const useManager = () => {
 
       const status = await manager.getVotingStatus();
 
+      const votingTokenContract = new ethers.Contract(status[4], ABI_ERC20, manager.runner);
+      const decimals = await votingTokenContract.decimals();
+
       const formattedStatus = {
         isActive: status[0],
         startTime: Number(status[1]),
         endTime: Number(status[2]),
-        totalVotesCount: ethers.formatEther(status[3]),
+        totalVotesCount: ethers.formatUnits(status[3], Number(decimals)),
         votingToken: status[4],
       };
       return formattedStatus;
@@ -287,6 +295,18 @@ const useManager = () => {
     }
   }, [teamManager]);
 
+  const getTokenDecimals = useCallback(async (tokenAddress: string) => {
+    try {
+      if (!provider) throw new Error("Provider not found");
+      const tokenContract = new ethers.Contract(tokenAddress, ABI_ERC20, provider);
+      const decimals = await tokenContract.decimals();
+      return Number(decimals);
+    } catch (error) {
+      console.error("Error fetching token decimals:", error);
+      throw new Error("Unable to fetch token decimals. Ensure the contract is a valid ERC20.");
+    }
+  }, [provider]);
+
   const emergencyWithdraw = useCallback(async (tokenAddress: string, receiver : string, amount : string) => {
     try {
       setIsLoading(FETCH_STATUS.WAIT_WALLET);
@@ -321,7 +341,8 @@ const useManager = () => {
     triggerEmergencyMode,
     emergencyWithdraw,
     resolveEmergency,
-    getIsEmergencyMode
+    getIsEmergencyMode,
+    getTokenDecimals
   }
 }
 
