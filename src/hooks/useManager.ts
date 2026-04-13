@@ -23,6 +23,7 @@ const useManager = () => {
   const [isLoading, setIsLoading] = useState(FETCH_STATUS.INIT);
   const [contractErrorText, setErrorText] = useState<string>("");
   const [teamManager, setTeamManager] = useState<ethers.Contract>()
+  const initPromiseRef = useRef<Promise<ethers.Contract> | null>(null);
   const {
     provider,
     address,
@@ -35,25 +36,38 @@ const useManager = () => {
     setPermissions
   } = useAuth()
 
-  const initializeProvider = useCallback(async () => {
-    if (!provider) {
-      PROVIDER.current = RPC_PROVIDER;
-    }
-    if (provider) {
-      PROVIDER.current = await provider.getSigner()
-    }
-    const teamManager = new ethers.Contract(
-      TEAM_MANAGER_ADDRESS!,
-      ABI_TEAMS_MANAGER,
-      PROVIDER.current
-    )
+  const initializeProvider = useCallback(() => {
+    if (!initPromiseRef.current) {
+      const init = async () => {
+        if (!provider) {
+          PROVIDER.current = RPC_PROVIDER;
+        }
+        if (provider) {
+          PROVIDER.current = await provider.getSigner()
+        }
+        const manager = new ethers.Contract(
+          TEAM_MANAGER_ADDRESS!,
+          ABI_TEAMS_MANAGER,
+          PROVIDER.current
+        )
 
-    setTeamManager(teamManager)
-    return teamManager
+        setTeamManager(manager)
+        return manager;
+      };
+
+      const promise = init();
+      promise.catch(() => {
+        initPromiseRef.current = null;
+      });
+      initPromiseRef.current = promise;
+    }
+
+    return initPromiseRef.current;
   }, [provider]);
 
   useEffect(() => {
-    initializeProvider()
+    initPromiseRef.current = null;
+    initializeProvider();
   }, [provider, initializeProvider])
 
   const getTeams = useCallback(async () => {

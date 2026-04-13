@@ -10,6 +10,7 @@ import ConnectWalletButton from "../navigation/ConnectWalletButton";
 import { ethers } from "ethers";
 import { toast } from "react-toastify";
 import { formatAddress } from "@/utils/formatAddress";
+import { roleToString } from "@/utils/roleToString";
 
 type Props = {
   open: boolean;
@@ -35,18 +36,7 @@ function AddAdminDialog({ open, closeDialog, onSuccess, isEmergencyMode, userRol
     closeDialog();
   };
 
-  const getRoleName = (r: AdminRole) => {
-    const names: Record<number, string> = {
-      [AdminRole.TEAM_MANAGER]: "Team Manager",
-      [AdminRole.VOTE_ADMIN]: "Vote Admin",
-      [AdminRole.RECOVERY_ADMIN]: "Recovery Admin",
-      [AdminRole.SUPER_ADMIN]: "Super Admin",
-    };
-
-    return names[r] || "Invalid Role";
-  };
-
-  const successMessage = `${getRoleName(role)} role assigned to ${formatAddress(
+  const successMessage = `${roleToString(role)} role assigned to ${formatAddress(
     targetAddress
   )}`;
 
