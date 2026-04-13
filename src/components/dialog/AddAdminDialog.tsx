@@ -88,7 +88,7 @@ function AddAdminDialog({ open, closeDialog, onSuccess, userRole }: Props) {
           errorText={contractErrorText}
           initialContent={
             <>
-              <h2 className="bg-custom-orange mt-1 font-bold text-xl text-black w-max px-1 uppercase">
+              <h2 id="dialog-title" className="bg-custom-orange mt-1 font-bold text-xl text-black w-max px-1 uppercase">
                 Add New Admin
               </h2>
 

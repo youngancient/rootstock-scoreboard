@@ -136,7 +136,7 @@ function WithdrawDialog({ open, closeDialog }: Props) {
           errorText={contractErrorText}
           initialContent={
             <>
-              <h2 className="bg-red-500 mt-1 font-bold text-xl text-black w-max px-2 uppercase shadow-sm">
+              <h2 id="dialog-title" className="bg-red-500 mt-1 font-bold text-xl text-black w-max px-2 uppercase shadow-sm">
                 Emergency Withdraw
               </h2>
 

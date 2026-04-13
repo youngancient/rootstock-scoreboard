@@ -68,7 +68,7 @@ function EmergencyDialog({ open, closeDialog, userRole }: Props) {
           errorText={contractErrorText}
           initialContent={
             <>
-              <h2 className={`${isEmergencyMode ? 'bg-custom-green' : 'bg-red-500'} mt-1 font-bold text-xl text-black w-max px-2 uppercase`}>
+              <h2 id="dialog-title" className={`${isEmergencyMode ? 'bg-custom-green' : 'bg-red-500'} mt-1 font-bold text-xl text-black w-max px-2 uppercase`}>
                 {isEmergencyMode ? "Resolve Emergency" : "Trigger Emergency"}
               </h2>
 

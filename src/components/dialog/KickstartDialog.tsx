@@ -95,7 +95,7 @@ function KickstartVotingDialog({
           errorText={contractErrorText}
           initialContent={
             <>
-              <h2 className="bg-custom-orange mt-1 font-bold text-xl text-black w-max px-1">
+              <h2 id="dialog-title" className="bg-custom-orange mt-1 font-bold text-xl text-black w-max px-1">
                 {votingStatus?.isActive
                   ? "UPDATE SESSION TIMER"
                   : "START VOTING SESSION"}

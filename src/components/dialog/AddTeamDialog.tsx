@@ -109,7 +109,7 @@ function AddTeamDialog({ open, closeDialog }: props) {
         <ContentDialog
           initialContent={
             <>
-              <h2 className={`${step === STEP_STATUS.INIT ? 'bg-custom-green' : 'bg-custom-pink'} mt-1 font-bold text-xl text-black w-max px-1 items-start`}>
+              <h2 id="dialog-title" className={`${step === STEP_STATUS.INIT ? 'bg-custom-green' : 'bg-custom-pink'} mt-1 font-bold text-xl text-black w-max px-1 items-start`}>
                 {
                   step === STEP_STATUS.INIT ? 'CREATE TEAM' : 'CONFIRM TEAM DATA'
                 }
